@@ -13,7 +13,10 @@ from tree_of_thought import run_tot
 from self_refine import run_self_refine
 from analogical_reasoning import run_analogical
 from self_debug import run_self_debug
-# 3 Inference Algorithms Developed by melissa
+# 3 Inference Algorithms Developed by Melissa Diaz
+from react import run_react
+from decomposition import run_decomp
+from tool_augmented import run_tool_augmented
 
 
 # In[17]:
@@ -29,8 +32,10 @@ def run_menu():
         "3": ("Tree of Thought",run_tot),
         "4": ("Self-Refine",run_self_refine),
         "5": ("Analogical Reasoning",run_analogical),
-        "6": ("Self-Debug",run_self_debug)
-        # Add other algorithms here
+        "6": ("Self-Debug",run_self_debug),
+        "7": ("ReAct", run_react),
+        "8": ("Decomposition",run_decomp),
+        "9": ("Tool-Augmented Reasoning", run_tool_augmented)
     }
     while True:
         print("\nAvailable inference algorithms: ")
