@@ -36,7 +36,7 @@ def llm_caller(prompt,sys="",temp=0.0,mod=None):
             {"role": "user","content": prompt},
         ],
         "temperature": temp,
-        "max_tokens": 256,
+        "max_tokens": 1024,
     }
     resp=requests.post(url,headers=headers,json=payload)
     data=resp.json()
