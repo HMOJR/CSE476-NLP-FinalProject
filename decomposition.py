@@ -2,17 +2,17 @@ from api import llm_caller
 
 # 2 calls
 def run_decomp(question: str) -> str:
-    system_prompt=(
+    system=(
         "You are a reasoning agent that decomposes problems into smaller, more manageable steps before solving. "
         "Do NOT solve the problem yet."
     )
 
     get_steps = (
         "Break the following question down into a few numbered steps. "
-        "For example: 1. step description, 2. step description\n\n"
+        "For example: 1. <step description>, 2. step <description>\n\n"
         f"{question}\n\n"
     )
-    steps = llm_caller(get_steps, system_prompt)
+    steps = llm_caller(get_steps, system)
 
     solve_prob = (
         f"{question}\n\n"
