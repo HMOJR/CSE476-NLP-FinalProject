@@ -38,10 +38,16 @@ def llm_caller(prompt,sys="",temp=0.0,mod=None):
         "temperature": temp,
         "max_tokens": 1024,
     }
-    resp=requests.post(url,headers=headers,json=payload)
-    data=resp.json()
+    resp = requests.post(url, headers=headers, json=payload, timeout=60)
 
-    return data["choices"][0]["message"]["content"]
+    # handles potential crashes
+    if resp.status_code != 200:
+        return ""
+
+    try:
+        return resp.json()["choices"][0]["message"]["content"]
+    except:
+        return ""
 
 
 # In[ ]:
