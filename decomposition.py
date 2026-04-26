@@ -1,6 +1,6 @@
 from api import llm_caller
-
-# 2 calls
+import re
+# 2 calls, fixed formatting issues
 def run_decomp(question: str) -> str:
     system=(
         "You are a reasoning agent that decomposes problems into smaller, more manageable steps before solving. "
@@ -8,19 +8,32 @@ def run_decomp(question: str) -> str:
     )
 
     get_steps = (
-        "Break the following question down into a few numbered steps. "
-        "For example: 1. <step description>, 2. step <description>\n\n"
-        f"{question}\n\n"
+        f"""
+        Break the following question down into a few (3-5) numbered steps.
+        Format:
+        1. <step description>
+        2. <step description>
+        3. ...
+
+        Question:
+        {question}
+        """
     )
     steps = llm_caller(get_steps, system)
 
     solve_prob = (
-        f"{question}\n\n"
-        f"{steps}\n\n"
-        "Return the final answer in format: ANSWER: <answer>"
+        f"""
+        Solve the problem using the steps below.
+        Question:
+        {question}
+
+        Steps:
+        {steps}
+        """
     )
-    answer = llm_caller(solve_prob, "Solve the question with the given steps.")
+    answer = llm_caller(solve_prob, "DO NOT include steps in answer. Return ONLY the shortest possible final answer in format: ANSWER: <final answer>")
 
     if "ANSWER:" in answer:
         return answer.split("ANSWER:")[-1].strip()
-    return answer.strip()
+    
+    return answer.split("\n")[-1].strip()

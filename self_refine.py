@@ -14,9 +14,9 @@ def run_self_refine(question: str) -> str:
     init_sys = (
         "You are a careful reasoning assistant. "
         "Answer the question as best you can. "
-        "End your response with: ANSWER: <final answer>"
+        "End your response with the final answer in the format: ANSWER: <final answer>"
     )
-    init_prompt = f"Question: {question}\n\nAnswer step by step, then end with ANSWER: <final answer>"
+    init_prompt = f"Question: {question}\n\nAnswer step by step, then end with the answer formatted: ANSWER: <final answer>"
     answer = llm_caller(init_prompt, init_sys, temp=0.0)
 
     for _ in range(MAX_ROUNDS):
@@ -44,13 +44,13 @@ def run_self_refine(question: str) -> str:
             "You are a careful reasoning assistant. "
             "You will be given a question, a previous answer, and feedback on that answer. "
             "Produce an improved answer that addresses the feedback. "
-            "End your response with: ANSWER: <final answer>"
+            "Do NOT include reasoning in final answer. Return your response with the answer in the format: ANSWER: <final answer>"
         )
         refine_prompt = (
             f"Question: {question}\n\n"
             f"Previous Answer:\n{answer}\n\n"
             f"Feedback:\n{critique}\n\n"
-            "Now produce an improved answer, ending with ANSWER: <final answer>"
+            "Now produce an improved answer returned in the format ANSWER: <final answer>"
         )
         answer = llm_caller(refine_prompt, refine_sys, temp=0.0)
 

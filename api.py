@@ -36,9 +36,9 @@ def llm_caller(prompt,sys="",temp=0.0,mod=None):
             {"role": "user","content": prompt},
         ],
         "temperature": temp,
-        "max_tokens": 1024,
+        "max_tokens": 512,
     }
-    resp = requests.post(url, headers=headers, json=payload, timeout=60)
+    resp = requests.post(url, headers=headers, json=payload, timeout=240)
 
     # handles potential crashes
     if resp.status_code != 200:

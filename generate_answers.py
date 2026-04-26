@@ -40,18 +40,19 @@ def load_questions(path: Path) -> List[Dict[str, Any]]:
 # 1 initial call to the llm
 def agent_loop(question:str) -> str:
     system = (
-        "You are a general reasoning agent deciding what the best approach to solving a question is.\n\n"
+        "You are a router deciding what the best approach to solving a question is.\n\n"
         "Select the BEST strategy (1-9) for solving the question from the list below:\n\n"
-        "1. Chain-of-Thought: step-by-step reasoning\n\n"
-        "2. Self-Consistency: generate multiple answers and vote on the best one\n\n"
-        "3. Tree-of-Thought: explore multiple reasoning paths\n\n"
-        "4. Self-refine: review the initial answer, suggest improvements, return final answer\n\n"
-        "5. Analogical reasoning: use examples to identify patterns, then apply them to the question\n\n"
-        "6. Self-debug: detect and fix errors in code\n\n"
-        "7. ReAct: stands for reasoning + acting\n\n"
-        "8. Decomposition: break problem into smaller steps before solving\n\n"
-        "9. Tool-augmented: use tools (calculator) if needed\n\n"
+        "1. Chain-of-Thought\n\n"
+        "2. Self-Consistency\n\n"
+        "3. Tree-of-Thought\n\n"
+        "4. Self-Refine\n\n"
+        "5. Analogical Reasoning\n\n"
+        "6. Self-Debug: for debugging and python rather than creating new code\n\n"
+        "7. ReAct\n\n"
+        "8. Decomposition\n\n"
+        "9. Tool-Augmented\n\n"
 
+        "If unsure or if more convenient to save calls, return 7\n\n"
         "Return ONLY the number, NO trailing period.\n\n"
         f"{question}"
     )
@@ -71,7 +72,7 @@ def agent_loop(question:str) -> str:
     elif result == "3":
         return run_tot(question)
     elif result == "4":
-        return  run_self_refine(question)
+        return run_self_refine(question)
     elif result == "5":
         return run_analogical(question)
     elif result == "6":
@@ -87,11 +88,33 @@ def agent_loop(question:str) -> str:
 
 
 def build_answers(questions: List[Dict[str, Any]]) -> List[Dict[str, str]]:
-    answers = []
-    for idx, question in enumerate(questions, start=1):
-        # Example: assume you have an agent loop that produces an answer string.
-        real_answer = agent_loop(question["input"])
+    if OUTPUT_PATH.exists():
+        with OUTPUT_PATH.open("r", encoding="utf-8") as fp:
+            answers = json.load(fp)
+    else:
+        answers = []
+
+    answers = answers[:5719] 
+    start_idx = len(answers)
+
+    for idx, question in enumerate(questions):
+        if idx < start_idx:
+            continue
+
+        try:
+            real_answer = agent_loop(question["input"])
+        except Exception as e:
+            real_answer = f"ERROR: {e}"
+
         answers.append({"output": real_answer})
+
+        # save frequently
+        if (idx - start_idx) % 20 == 0:
+            with OUTPUT_PATH.open("w", encoding="utf-8") as fp:
+                json.dump(answers, fp, ensure_ascii=False, indent=2)
+
+        print(f"{idx+1}/{len(questions)} done")
+
     return answers
 
 
@@ -120,10 +143,10 @@ def main() -> None:
     questions = load_questions(INPUT_PATH)
     answers = build_answers(questions)
 
-    with OUTPUT_PATH.open("w") as fp:
+    with OUTPUT_PATH.open("w", encoding="utf-8") as fp:
         json.dump(answers, fp, ensure_ascii=False, indent=2)
 
-    with OUTPUT_PATH.open("r") as fp:
+    with OUTPUT_PATH.open("r", encoding="utf-8") as fp:
         saved_answers = json.load(fp)
     validate_results(questions, saved_answers)
     print(

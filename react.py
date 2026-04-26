@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import re
 from api import llm_caller
 from tool_augmented import calculator
 
@@ -12,7 +12,7 @@ def run_react(question: str) -> str:
         "Think about the question, then decide an action. Follow this format:\n\n"
         "Thought: <reasoning>\n"
         "Action: calc | none\n"
-        "Expression: <math expression if calc, otherwise none>"
+        "Expression: <arithmetic expression if calc, otherwise none>"
     )
 
     action_choice = llm_caller(action_prompt, system,temp=0.0)
@@ -25,25 +25,31 @@ def run_react(question: str) -> str:
             expr = line.split(":", 1)[1].strip() # should only contain expression
 
     if action == "calc" and expr and expr.lower() != "none":
-        observation = calculator(expr)
+        try:
+            observation = calculator(expr)
+        except: 
+            observation= llm_caller(f"Compute this problem: {question}", system,temp=0.0)
+
 
         reflection_prompt = (
             f"Question: {question}\n\n"
             f"Thought + Action:\n{action_choice}\n\n"
             f"Observation: {observation}\n\n"
-            "Reflect on the observation and return the final answer as: "
-            "ANSWER: <final answer>"
+            "Reflect on the observation and return the shortest possible final answer in the format: "
+            "ANSWER: <final answer or expression>"
         )
         answer = llm_caller(reflection_prompt, system, temp=0.0)
 
     else:
         answer_prompt = (
             f"{question}\n\n"
-            "Return the final answer in format: ANSWER: <answer>"
+            "DO NOT include explanations\n\n"
+            "ONLY return the shortest possible final answer in format: "
+            "ANSWER: <final answer, function, or expression>."
         )
         answer = llm_caller(answer_prompt, system, temp=0.0)
 
     if "ANSWER:" in answer:
         return answer.split("ANSWER:")[-1].strip()
 
-    return answer.strip()
+    return answer.split("\n")[-1].strip()

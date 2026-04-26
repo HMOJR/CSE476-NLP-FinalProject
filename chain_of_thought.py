@@ -16,12 +16,12 @@ def run_cot(question: str) -> str:
     system_prompt=(
         "You are a very smart reasoning assistant."
         "Think step by step carefully."
-        "After reasoning, end with: ANSWER: <answer>."
+        "After reasoning, return final answer in format: ANSWER: <answer>."
     )
     user_prompt=(
         f"Solve this problem step by step:\n\n"
         f"{question}\n\n"
-        "End with: ANSWER: <final answer>"
+        "Do NOT return steps used. Return only final answer in format: ANSWER: <final answer>"
     )
     # Final answer
     txt=llm_caller(user_prompt,system_prompt)

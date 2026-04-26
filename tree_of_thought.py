@@ -65,7 +65,7 @@ def run_tot(question: str) -> str:
     final_t=(
         f"Based on the following reasoning, give ONLY the final answer now:\n\n"
         f"{bthought}\n\n"
-        "Respond as: ANSWER: <final answer>")
+        "Do not include reasoning in the final answer. Respond only with the final answer in the format: ANSWER: <final answer>")
     # Final answer to tree of thought
     finale=llm_caller(final_t, "You extract the final answers.",temp=0.0)
     if "ANSWER:" in finale:

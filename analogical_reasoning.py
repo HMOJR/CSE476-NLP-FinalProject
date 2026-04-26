@@ -28,13 +28,13 @@ def run_analogical(question: str) -> str:
         "You are a careful reasoning assistant. "
         "Use the provided examples as a guide to solve the new problem. "
         "Follow the same reasoning pattern shown in the examples. "
-        "End with: ANSWER: <final answer>"
+        "Return final answer in the format: ANSWER: <final answer>"
     )
     solve_prompt = (
         f"Here are some worked examples that use the same reasoning pattern:\n\n"
         f"{analogies}\n\n"
         f"Now solve this problem using the same approach:\n\n{question}\n\n"
-        "End with: ANSWER: <final answer>"
+        "Do not return reasoning. Return ONLY the final answer in the format: ANSWER: <final answer>"
     )
     result = llm_caller(solve_prompt, solve_sys, temp=0.0)
 

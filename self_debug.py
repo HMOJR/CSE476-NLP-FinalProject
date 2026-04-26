@@ -7,6 +7,7 @@ import subprocess
 import sys
 import re
 from api import llm_caller
+from react import run_react
  
 MAX_DEBUG_ROUNDS = 3
  
@@ -36,10 +37,10 @@ def run_self_debug(question: str) -> str:
     # Step 1: Generate initial solution
     gen_sys = (
         "You are a skilled problem solver. "
-        "If the problem can be solved with Python code, write a complete Python script "
-        "inside a ```python ... ``` code block that prints the final answer. "
-        "If it cannot be solved with code, reason step by step and end with ANSWER: <final answer>. "
-        "Always end your response with ANSWER: <final answer> on its own line."
+        "If the problem requires a function to be written in Python, write a Python script without extra explanations or markdown "
+        "inside a ```python ... ``` code block. "
+        "If it cannot be solved right away, reason step by step to correct and return either the code block or the final answer in the format: ANSWER: <final answer>, without the tags"
+        "Return your response as code if required, or in the format: ANSWER: <final answer>, with the actual final answer replacing the tags"
     )
     gen_prompt = f"Solve the following problem:\n\n{question}"
     solution = llm_caller(gen_prompt, gen_sys, temp=0.0)
@@ -77,7 +78,7 @@ def run_self_debug(question: str) -> str:
         # If code still fails, fall through to text reasoning
         success, output = _try_execute_python(code)
         if success and output:
-            return output
+            return output.strip()
  
     # Text/reasoning path: use execution trace simulation
     solution_text = solution
@@ -102,19 +103,18 @@ def run_self_debug(question: str) -> str:
         fix_sys = (
             "You are a careful problem solver. "
             "You will be given a problem, a flawed solution, and a bug report. "
-            "Produce a corrected solution. Always end with ANSWER: <final answer> on its own line."
+            "Produce a corrected solution. Return answer in the format asked for, or if not mentioned, return in the format: ANSWER: <final answer>, where the actual final answer replaces the tags"
         )
         fix_prompt = (
             f"Problem: {question}\n\n"
             f"Flawed solution:\n{solution_text}\n\n"
             f"Bug report:\n{trace}\n\n"
-            "Provide a corrected solution ending with ANSWER: <final answer>"
+            "Return the final corrected solution in the format asked for, or if not mentioned, return in the format: ANSWER: <final answer>, where the actual final answer replaces the tags"
         )
         solution_text = llm_caller(fix_prompt, fix_sys, temp=0.0)
  
     if "ANSWER:" in solution_text:
         return solution_text.split("ANSWER:")[-1].strip()
     # Fallback: return the last non-empty line
-    lines = [l.strip() for l in solution_text.strip().splitlines() if l.strip()]
-    return lines[-1] if lines else solution_text
+    return run_react(question)
  
