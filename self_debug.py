@@ -39,8 +39,7 @@ def run_self_debug(question: str) -> str:
         "You are a skilled problem solver. "
         "If the problem requires a function to be written in Python, write a Python script without extra explanations or markdown "
         "inside a ```python ... ``` code block. "
-        "If it cannot be solved right away, reason step by step to correct and return either the code block or the final answer in the format: ANSWER: <final answer>, without the tags"
-        "Return your response as code if required, or in the format: ANSWER: <final answer>, with the actual final answer replacing the tags"
+        "If it cannot be solved right away, reason step by step to correct and return either the code block, function, or the final answer in the format: ANSWER: final answer"
     )
     gen_prompt = f"Solve the following problem:\n\n{question}"
     solution = llm_caller(gen_prompt, gen_sys, temp=0.0)
@@ -103,13 +102,13 @@ def run_self_debug(question: str) -> str:
         fix_sys = (
             "You are a careful problem solver. "
             "You will be given a problem, a flawed solution, and a bug report. "
-            "Produce a corrected solution. Return answer in the format asked for, or if not mentioned, return in the format: ANSWER: <final answer>, where the actual final answer replaces the tags"
+            "Produce a corrected solution. Return the answer in the format asked for, or if not mentioned, return in the format: ANSWER: final answer"
         )
         fix_prompt = (
             f"Problem: {question}\n\n"
             f"Flawed solution:\n{solution_text}\n\n"
             f"Bug report:\n{trace}\n\n"
-            "Return the final corrected solution in the format asked for, or if not mentioned, return in the format: ANSWER: <final answer>, where the actual final answer replaces the tags"
+            "Return the final corrected solution in the format asked for, or if not mentioned, return in the format: ANSWER: final answer"
         )
         solution_text = llm_caller(fix_prompt, fix_sys, temp=0.0)
  

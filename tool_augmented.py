@@ -9,8 +9,13 @@ ALLOWED_UNOPS  = {ast.UAdd: op.pos, ast.USub: op.neg}
 
 def calculator(expr: str):
     expr = expr.strip()
-    expr = expr.replace("^", "**")
-    expr = re.sub(r"[^0-9+\-*/().^ ]", "", expr)
+    expr = (
+    expr.replace("×", "*")
+        .replace("÷", "/")
+        .replace("−", "-")
+        .replace("^", "**")
+    )
+    expr = re.sub(r"[^0-9+\-*/(). ]", "", expr)
     expr = re.sub(r"(\d)\s+(\d)", r"\1*\2", expr)  # if input is something like 10 10, change to 10*10
     
     if " " in expr and any(op in expr for op in ["+", "-", "*", "/"]) is False:
@@ -45,36 +50,37 @@ def run_tool_augmented(question: str) -> str:
     )
 
     decision_prompt = (
-        "Does the following question require a calculator? "
-        "Answer ONLY with 'yes' or 'no'.\n\n"
+        "Does the following question require a calculation? "
+        "Retun ONLY 'yes' or 'no'.\n\n"
         f"{question}"
     )
     decision = llm_caller(decision_prompt, system, temp=0.0).strip().lower()
 
     if "yes" in decision.lower():
         expr_prompt = (
-            "Extract a math expression from the question like: 4 + 5 * (5 - 4) "
-            "Return ONLY the math expression.\n\n"
-            f"{question}"
+            f"Question: {question}\n\n"
+            "Create a valid math expression by following what the question asks carefully.\n\n"
+            "Avoid expressions where the denominator becomes 0 or undefined. "
+            "Do NOT include words. Convert percentages to decimal if necessary.\n\n"
+            "Return ONLY a clean arithmetic expression. NO unecessary fluff"
         )
-        expr = llm_caller(expr_prompt, system, temp=0.0).strip()
+        expr = llm_caller(expr_prompt, "You carefully extract math expressions", 0.0).strip()
 
         try:
             result = calculator(expr)
-            return str(result)
         except:
-            compute = llm_caller(f"Do not include reasoning. Compute this problem and return numeric answer ONLY: {question}", system,temp=0.0)
-            return compute.strip()
+            result = llm_caller(f"Solve and return ONLY the final number, no reasoning.\nExpression: {expr}", "You are a professional mathematician that solves math equations",0.0).strip()
 
-    # if tool is not needed
+        return str(result).strip()
+
     answer_prompt = (
-        f"{question}\n\n"
-        "DO NOT include the expression.\n\n" 
-        "Return the shortest possible answer in the format: ANSWER: <final answer>"
+        f"Question: {question}\n\n"
+        "Solve and return ONLY the correct answer in format: ANSWER: <final answer>, unless the question specifies how to return. DO NOT return how you got the answer."
     )
-    answer = llm_caller(answer_prompt, system, temp=0.0)
+
+    answer = llm_caller(answer_prompt, "You carefully read then answer the question, answer by using what is provided", 0.0)
 
     if "ANSWER:" in answer:
         return answer.split("ANSWER:")[-1].strip()
-    
-    return answer.split("\n")[-1].strip()
+
+    return answer.strip()

@@ -43,14 +43,14 @@ def run_self_refine(question: str) -> str:
         refine_sys = (
             "You are a careful reasoning assistant. "
             "You will be given a question, a previous answer, and feedback on that answer. "
-            "Produce an improved answer that addresses the feedback. "
-            "Do NOT include reasoning in final answer. Return your response with the answer in the format: ANSWER: <final answer>"
+            "Find an improved answer using the feedback. "
+            "Do NOT include reasoning in final answer. Return ONLY your final answer in the format: ANSWER: <final answer>"
         )
         refine_prompt = (
             f"Question: {question}\n\n"
             f"Previous Answer:\n{answer}\n\n"
             f"Feedback:\n{critique}\n\n"
-            "Now produce an improved answer returned in the format ANSWER: <final answer>"
+            "Return ONLY the correct final answer, NO reasoning, in the format: ANSWER: <final answer>"
         )
         answer = llm_caller(refine_prompt, refine_sys, temp=0.0)
 

@@ -16,7 +16,7 @@ def run_analogical(question: str) -> str:
         "Show the full solution for each example."
     )
     analogy_prompt = (
-        f"I need to solve this problem:\n\n{question}\n\n"
+        f"I need to solve this problem:\n\nProblem: {question}\n\n"
         "Before solving it, generate 2-3 analogous worked examples that use "
         "the same type of reasoning. Label them Example 1, Example 2, etc., "
         "and fully solve each one."
@@ -28,13 +28,13 @@ def run_analogical(question: str) -> str:
         "You are a careful reasoning assistant. "
         "Use the provided examples as a guide to solve the new problem. "
         "Follow the same reasoning pattern shown in the examples. "
-        "Return final answer in the format: ANSWER: <final answer>"
+        "Do NOT return reasoning in the final answer. Return final answer ONLY in the format: ANSWER: <final answer>"
     )
     solve_prompt = (
         f"Here are some worked examples that use the same reasoning pattern:\n\n"
         f"{analogies}\n\n"
-        f"Now solve this problem using the same approach:\n\n{question}\n\n"
-        "Do not return reasoning. Return ONLY the final answer in the format: ANSWER: <final answer>"
+        f"Now solve this problem using the same approach:\n\nProblem: {question}\n\n"
+        "Do not return reasoning in the final answer. Return ONLY the final answer in the format: ANSWER: <final answer>"
     )
     result = llm_caller(solve_prompt, solve_sys, temp=0.0)
 

@@ -40,30 +40,27 @@ def load_questions(path: Path) -> List[Dict[str, Any]]:
 # 1 initial call to the llm
 def agent_loop(question:str) -> str:
     system = (
-        "You are a router deciding what the best approach to solving a question is.\n\n"
-        "Select the BEST strategy (1-9) for solving the question from the list below:\n\n"
+        "Select the BEST strategy (return a number 1-9) for solving the question from the list below:\n\n"
         "1. Chain-of-Thought\n\n"
         "2. Self-Consistency\n\n"
         "3. Tree-of-Thought\n\n"
         "4. Self-Refine\n\n"
         "5. Analogical Reasoning\n\n"
-        "6. Self-Debug: for debugging and python rather than creating new code\n\n"
+        "6. Self-Debug: for debugging python and code generation\n\n"
         "7. ReAct\n\n"
         "8. Decomposition\n\n"
-        "9. Tool-Augmented\n\n"
-
-        "If unsure or if more convenient to save calls, return 7\n\n"
-        "Return ONLY the number, NO trailing period.\n\n"
-        f"{question}"
+        "9. Tool-Augmented: DO NOT use when code functions are involved\n\n"
     )
+    router_prompt = (
+        f"{system}\n\nQuestion:\n{question}\n\n"
+        "Return ONLY the number 1-9. NO trailing period.\n\n"
+    )
+    result = llm_caller(router_prompt, "You are a router deciding what the best approach to solving this question is", 0.0).strip()
+    
+    valid = {"1", "2", "3", "4", "5", "6", "7","8", "9"}
 
-    try:
-        result = llm_caller("Return ONLY the number", system, 0.0).strip()
-
-        result = result.replace(".", "")
-        result = result.split()[0]
-    except:
-        result = "7"  # default react
+    if result not in valid:
+        result = "7"
 
     if result == "1":
         return run_cot(question)
@@ -88,33 +85,14 @@ def agent_loop(question:str) -> str:
 
 
 def build_answers(questions: List[Dict[str, Any]]) -> List[Dict[str, str]]:
-    if OUTPUT_PATH.exists():
-        with OUTPUT_PATH.open("r", encoding="utf-8") as fp:
-            answers = json.load(fp)
-    else:
-        answers = []
+    answers = []
+    for idx, question in enumerate(questions, start=1):
+        real_answer = agent_loop(question["input"]).replace("×", "*")
 
-    answers = answers[:5719] 
-    start_idx = len(answers)
-
-    for idx, question in enumerate(questions):
-        if idx < start_idx:
-            continue
-
-        try:
-            real_answer = agent_loop(question["input"])
-        except Exception as e:
-            real_answer = f"ERROR: {e}"
+        if len(real_answer) >= 5000:
+            real_answer = real_answer[:4500]
 
         answers.append({"output": real_answer})
-
-        # save frequently
-        if (idx - start_idx) % 20 == 0:
-            with OUTPUT_PATH.open("w", encoding="utf-8") as fp:
-                json.dump(answers, fp, ensure_ascii=False, indent=2)
-
-        print(f"{idx+1}/{len(questions)} done")
-
     return answers
 
 

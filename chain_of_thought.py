@@ -14,14 +14,14 @@ from api import llm_caller
 def run_cot(question: str) -> str:
     # This chain of thought inferencial technique is simple producing step-by-step reasoning to answer
     system_prompt=(
-        "You are a very smart reasoning assistant."
+        "You are a very smart and logical reasoning assistant."
         "Think step by step carefully."
-        "After reasoning, return final answer in format: ANSWER: <answer>."
+        "After reasoning, return ONLY the final answer in format: ANSWER: <answer>. Do NOT return the reasoning used."
     )
     user_prompt=(
         f"Solve this problem step by step:\n\n"
-        f"{question}\n\n"
-        "Do NOT return steps used. Return only final answer in format: ANSWER: <final answer>"
+        f"Problem: {question}\n\n"
+        "Do NOT return steps or reasoning used. Return only final answer in format: ANSWER: <final answer>"
     )
     # Final answer
     txt=llm_caller(user_prompt,system_prompt)
